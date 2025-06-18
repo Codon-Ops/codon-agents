@@ -1,0 +1,46 @@
+# Example configuration file for LangChain/LangGraph Agents
+# Copy this file and customize for your environment
+
+database:
+  neo4j_uri: "bolt://localhost:7687"
+  neo4j_username: "neo4j"
+  neo4j_password: "your-password"
+  neo4j_database: "neo4j"
+  neo4j_mcp_url: "http://localhost:8001/mcp"
+  neo4j_mcp_transport: "streamable_http"
+
+monitoring:
+  prometheus_url: "http://localhost:9090"
+  prometheus_auth_token: null  # Optional: Bearer token for authentication
+  alert_webhook_url: null      # Optional: Webhook for alert notifications
+  prometheus_mcp_url: "http://localhost:8000/mcp"
+  prometheus_mcp_transport: "streamable_http"
+
+cloud:
+  aws_region: "us-east-1"
+  aws_profile: null           # Optional: AWS profile name
+  aws_access_key_id: null     # Optional: Use AWS credentials instead of profile
+  aws_secret_access_key: null # Optional: Use AWS credentials instead of profile
+  terraform_dir: "./terraform"
+
+llm:
+  provider: "openai"                           # "openai" or "anthropic"
+  model_name: "gpt-4.1-mini"                 # OpenAI: gpt-3.5-turbo, gpt-4, etc. | Anthropic: claude-3-sonnet-20240229, etc.
+  temperature: 0.1
+  max_tokens: 5000
+  openai_api_key: "your-openai-api-key"       # Required for OpenAI provider
+  anthropic_api_key: "your-anthropic-api-key" # Required for Anthropic provider
+
+langsmith:
+  enabled: true                                # Enable LangSmith tracing
+  api_key: "your-langsmith-api-key"           # Get from https://smith.langchain.com
+  project: "codon-kg-agents"                  # Project name in LangSmith
+  endpoint: "https://api.smith.langchain.com" # LangSmith API endpoint
+  tracing: true                               # Enable detailed tracing
+  session_name: null                          # Optional: Custom session name
+
+security:
+  secret_key: "your-secret-key-for-audit-logging"
+  enable_audit_logging: true
+  max_retry_attempts: 3
+  command_timeout: 300

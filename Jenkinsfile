@@ -15,7 +15,6 @@ pipeline {
                 withCredentials([sshUserPrivateKey(credentialsId: env.CRED_ID, keyFileVariable: 'SSH_KEY')]) {
                     sh '''
                         ssh -o StrictHostKeyChecking=no -i $SSH_KEY ${EC2_USER}@${EC2_HOST} "
-                            # ensure Git won’t refuse to run here
                             git config --global --add safe.directory ${REPO_DIR} && \
                             cd ${REPO_DIR} && \
                             sudo docker-compose down || echo 'No containers to stop'
@@ -31,9 +30,11 @@ pipeline {
                 withCredentials([sshUserPrivateKey(credentialsId: env.CRED_ID, keyFileVariable: 'SSH_KEY')]) {
                     sh '''
                         ssh -o StrictHostKeyChecking=no -i $SSH_KEY ${EC2_USER}@${EC2_HOST} "
+                            # mark safe for ubuntu and for root
                             git config --global --add safe.directory ${REPO_DIR} && \
+                            sudo git config --global --add safe.directory ${REPO_DIR} && \
                             cd ${REPO_DIR} && \
-                            git pull origin main
+                            sudo git pull origin main
                         "
                     '''
                 }

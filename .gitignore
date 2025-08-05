@@ -19,19 +19,37 @@ var/
 *.egg-info/
 .installed.cfg
 *.egg
+.coverage
+htmlcov/
+.pytest_cache/
+.mypy_cache/
 
 # Environment
 .env
+.env.local
+.env.development
+.env.test
+.env.production
+.env.staging
+!.env.example
+.env.docker
 .venv
 venv/
 ENV/
 env/
+
+# Docker
+.dockerignore
+docker-compose.override.yml
 
 # IDE
 .idea/
 .vscode/
 *.swp
 *.swo
+*.sublime-*
+.spyderproject
+.spyproject
 
 # Operating System
 .DS_Store
@@ -42,6 +60,49 @@ env/
 ehthumbs.db
 Thumbs.db
 
+# Database
+*.db
+*.sqlite3
+*.sqlite
+
+# Logs and temporary files
+*.log
+*.tmp
+*.temp
+logs/
+
+# Security and credentials
+*.pem
+*.key
+*.crt
+*.p12
+secrets/
+credentials/
+
 # Project specific
 config.yaml
-*.log
+data/
+outputs/
+models/
+checkpoints/
+
+# Jupyter Notebooks
+.ipynb_checkpoints/
+*.ipynb
+
+# Node.js (if using any JS tools)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Terraform (if terraform files are in this repo)
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+
+# MCP and AI related
+.langchain_cache/
+.chroma/
+vector_store/

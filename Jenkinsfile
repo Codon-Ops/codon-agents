@@ -2,10 +2,10 @@ pipeline {
     agent any
 
     environment {
-        EC2_HOST   = '100.28.76.68'   // Replace with your actual EC2 IP
+        EC2_HOST   = '100.28.76.68'
         EC2_USER   = 'ubuntu'
         REPO_DIR   = '/home/ubuntu/codon-agents'
-        CRED_ID    = 'codon-agents-ui'   // your SSH key credential ID
+        CRED_ID    = 'codon-agents-ui'
     }
 
     stages {
@@ -15,8 +15,10 @@ pipeline {
                 withCredentials([sshUserPrivateKey(credentialsId: env.CRED_ID, keyFileVariable: 'SSH_KEY')]) {
                     sh '''
                         ssh -o StrictHostKeyChecking=no -i $SSH_KEY ${EC2_USER}@${EC2_HOST} "
-                            cd ${REPO_DIR} &&
-                            docker-compose down || echo 'No containers to stop'
+                            # ensure Git won’t refuse to run here
+                            git config --global --add safe.directory ${REPO_DIR} && \
+                            cd ${REPO_DIR} && \
+                            sudo docker-compose down || echo 'No containers to stop'
                         "
                     '''
                 }
@@ -29,7 +31,8 @@ pipeline {
                 withCredentials([sshUserPrivateKey(credentialsId: env.CRED_ID, keyFileVariable: 'SSH_KEY')]) {
                     sh '''
                         ssh -o StrictHostKeyChecking=no -i $SSH_KEY ${EC2_USER}@${EC2_HOST} "
-                            cd ${REPO_DIR} &&
+                            git config --global --add safe.directory ${REPO_DIR} && \
+                            cd ${REPO_DIR} && \
                             git pull origin main
                         "
                     '''
@@ -43,8 +46,8 @@ pipeline {
                 withCredentials([sshUserPrivateKey(credentialsId: env.CRED_ID, keyFileVariable: 'SSH_KEY')]) {
                     sh '''
                         ssh -o StrictHostKeyChecking=no -i $SSH_KEY ${EC2_USER}@${EC2_HOST} "
-                            cd ${REPO_DIR} &&
-                            docker-compose up -d
+                            cd ${REPO_DIR} && \
+                            sudo docker-compose up -d
                         "
                     '''
                 }
@@ -57,9 +60,9 @@ pipeline {
                 withCredentials([sshUserPrivateKey(credentialsId: env.CRED_ID, keyFileVariable: 'SSH_KEY')]) {
                     sh '''
                         ssh -o StrictHostKeyChecking=no -i $SSH_KEY ${EC2_USER}@${EC2_HOST} "
-                            cd ${REPO_DIR} &&
-                            sleep 15 &&
-                            docker-compose ps
+                            cd ${REPO_DIR} && \
+                            sleep 15 && \
+                            sudo docker-compose ps
                         "
                     '''
                 }
@@ -76,8 +79,8 @@ pipeline {
             withCredentials([sshUserPrivateKey(credentialsId: env.CRED_ID, keyFileVariable: 'SSH_KEY')]) {
                 sh '''
                     ssh -o StrictHostKeyChecking=no -i $SSH_KEY ${EC2_USER}@${EC2_HOST} "
-                        cd ${REPO_DIR} &&
-                        docker-compose logs --tail=20
+                        cd ${REPO_DIR} && \
+                        sudo docker-compose logs --tail=20
                     "
                 '''
             }
@@ -87,8 +90,8 @@ pipeline {
             withCredentials([sshUserPrivateKey(credentialsId: env.CRED_ID, keyFileVariable: 'SSH_KEY')]) {
                 sh '''
                     ssh -o StrictHostKeyChecking=no -i $SSH_KEY ${EC2_USER}@${EC2_HOST} "
-                        cd ${REPO_DIR} &&
-                        docker-compose ps || echo 'Could not get container status'
+                        cd ${REPO_DIR} && \
+                        sudo docker-compose ps || echo 'Could not get container status'
                     "
                 '''
             }

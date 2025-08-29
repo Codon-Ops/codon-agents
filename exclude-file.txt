@@ -1,0 +1,16 @@
+.git/
+.github/
+.editorconfig
+.gitignore
+.travis.yml
+.vscode/
+Jenkinsfile
+composer.json
+composer.lock
+demo/
+phpunit.xml
+phpunit.xml.dist
+sftp-config.json
+post-merge
+test.html
+exclude-file.txt

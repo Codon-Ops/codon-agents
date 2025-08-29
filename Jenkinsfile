@@ -1,100 +1,31 @@
 pipeline {
     agent any
 
-    environment {
-        EC2_HOST   = '100.28.76.68'
-        EC2_USER   = 'ubuntu'
-        REPO_DIR   = '/home/ubuntu/codon-agents'
-        CRED_ID    = 'codon-agents-ui'
-    }
-
     stages {
-        stage('Stop Services') {
+        stage('Build') {
             steps {
-                echo '🛑 Stopping Docker containers on EC2...'
-                withCredentials([sshUserPrivateKey(credentialsId: env.CRED_ID, keyFileVariable: 'SSH_KEY')]) {
+                echo 'Building..'
+            }
+        }
+        stage('Test') {
+            steps {
+                echo 'Testing..'
+            }
+        }
+        stage('Deploy to EC2') {
+            steps {
+                sshagent (credentials: ['codon-agent-ui-1']) {
                     sh '''
-                        ssh -o StrictHostKeyChecking=no -i $SSH_KEY ${EC2_USER}@${EC2_HOST} "
-                            git config --global --add safe.directory ${REPO_DIR} && \
-                            cd ${REPO_DIR} && \
-                            sudo docker-compose down || echo 'No containers to stop'
-                        "
+                        # Shut down containers
+                        ssh -o StrictHostKeyChecking=no ubuntu@3.93.224.218 "cd /home/ubuntu/langgraph-agent-demo && /usr/bin/docker-compose down -v"
+
+                        # Sync updated repo
+                        rsync -vrzhe "ssh -o StrictHostKeyChecking=No" --rsync-path="/usr/bin/sudo /usr/bin/rsync" --partial --protocol=30 --timeout=300 --exclude-from='exclude-file.txt' ./ ubuntu@3.93.224.218:/home/ubuntu/langgraph-agent-demo/
+
+                        # Start containers again
+                        ssh -o StrictHostKeyChecking=no ubuntu@3.93.224.218 "cd /home/ubuntu/langgraph-agent-demo && /usr/bin/docker-compose up -d"
                     '''
                 }
-            }
-        }
-
-        stage('Update Code') {
-            steps {
-                echo '📥 Pulling latest code on EC2...'
-                withCredentials([sshUserPrivateKey(credentialsId: env.CRED_ID, keyFileVariable: 'SSH_KEY')]) {
-                    sh '''
-                        ssh -o StrictHostKeyChecking=no -i $SSH_KEY ${EC2_USER}@${EC2_HOST} "
-                            # mark safe for ubuntu and for root
-                            git config --global --add safe.directory ${REPO_DIR} && \
-                            sudo git config --global --add safe.directory ${REPO_DIR} && \
-                            cd ${REPO_DIR} && \
-                            sudo git pull origin main
-                        "
-                    '''
-                }
-            }
-        }
-
-        stage('Start Services') {
-            steps {
-                echo '🚀 Starting Docker containers on EC2...'
-                withCredentials([sshUserPrivateKey(credentialsId: env.CRED_ID, keyFileVariable: 'SSH_KEY')]) {
-                    sh '''
-                        ssh -o StrictHostKeyChecking=no -i $SSH_KEY ${EC2_USER}@${EC2_HOST} "
-                            cd ${REPO_DIR} && \
-                            sudo docker-compose up -d
-                        "
-                    '''
-                }
-            }
-        }
-
-        stage('Health Check') {
-            steps {
-                echo '🏥 Checking container status on EC2...'
-                withCredentials([sshUserPrivateKey(credentialsId: env.CRED_ID, keyFileVariable: 'SSH_KEY')]) {
-                    sh '''
-                        ssh -o StrictHostKeyChecking=no -i $SSH_KEY ${EC2_USER}@${EC2_HOST} "
-                            cd ${REPO_DIR} && \
-                            sleep 15 && \
-                            sudo docker-compose ps
-                        "
-                    '''
-                }
-            }
-        }
-    }
-
-    post {
-        success {
-            echo '✅ Remote deployment completed successfully!'
-        }
-        failure {
-            echo '❌ Remote deployment failed!'
-            withCredentials([sshUserPrivateKey(credentialsId: env.CRED_ID, keyFileVariable: 'SSH_KEY')]) {
-                sh '''
-                    ssh -o StrictHostKeyChecking=no -i $SSH_KEY ${EC2_USER}@${EC2_HOST} "
-                        cd ${REPO_DIR} && \
-                        sudo docker-compose logs --tail=20
-                    "
-                '''
-            }
-        }
-        always {
-            echo '📊 Final container status on EC2:'
-            withCredentials([sshUserPrivateKey(credentialsId: env.CRED_ID, keyFileVariable: 'SSH_KEY')]) {
-                sh '''
-                    ssh -o StrictHostKeyChecking=no -i $SSH_KEY ${EC2_USER}@${EC2_HOST} "
-                        cd ${REPO_DIR} && \
-                        sudo docker-compose ps || echo 'Could not get container status'
-                    "
-                '''
             }
         }
     }
